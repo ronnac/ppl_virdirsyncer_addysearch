@@ -13,7 +13,7 @@
 
 
 function read_vcard {
-    cat "$SelectedVcard" | while read line ; do
+    cat "$SelectedVcard" | sed ':a;N;$!ba;s/\r\n //g' | while read -r line ; do
 
     if [[ $line = EMAIL* ]]; then
         #starts it at one!
@@ -55,6 +55,12 @@ function read_vcard {
     if [[ $line = FN:* ]]; then
         full_name=${line#*:}
     fi
+    if [[ $line = ADR* ]]; then
+        adr=${line#*:}
+    fi
+    if [[ $line = NOTE:* ]]; then
+        note=${line}
+    fi
     if [[ "$line" =~ "END:VCARD" ]]; then
         echo "  ✢ $full_name"
         if [ ! -z "$org" ];then
@@ -79,6 +85,12 @@ function read_vcard {
             done
         else 
             printf "  ✉ %s: %s\n" "${email_type[1]}" "${email[1]}" 
+        fi
+        if [ ! -z "$adr" ];then
+            echo -e "  ☖ ${adr//\\n/\\n    }"
+        fi
+        if [ ! -z "$note" ];then
+            echo -e "  ☖ ${note//\\n/\\n    }"
         fi
     fi
 
@@ -112,7 +124,7 @@ else
             SelectedVcard="$1"
         else
             #if it's coming from pplsearch for preview
-            SelectedVcard=$(echo "$1" | awk -F ':' '{print $2}' | realpath -p)
+            SelectedVcard=$(echo "$1" | awk -F ':' '{print $2}' | xargs realpath )
         fi
         if [ ! -f "$SelectedVcard" ];then
             echo "File not found..."
