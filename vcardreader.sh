@@ -13,7 +13,11 @@
 
 
 function read_vcard {
-    cat "$SelectedVcard" | sed ':a;N;$!ba;s/\r\n //g' | while read -r line ; do
+    cat "$SelectedVcard" | \
+	    sed -e ':a;N;$!ba;s/\r\n //g' \
+	    -e 's/;\+/\\n/g' \
+	    -e 's/\\,/,/g' \
+	    | while read -r line ; do
 
     if [[ $line = EMAIL* ]]; then
         #starts it at one!
